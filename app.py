@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from ydata_profiling import ProfileReport
-from streamlit_pandas_profiling import st_profile_report
+import tempfile
 
 # App title
 st.title("Excel File Profiling App")
@@ -15,18 +15,20 @@ if uploaded_file:
     st.write("## Preview of the Uploaded Dataset")
     st.dataframe(df)
 
-    # Generate and display profile report
+    # Generate profile report
     st.write("## Dataset Profiling Report")
     profile = ProfileReport(df, title="Dataset Profiling Report", explorative=True)
-    st_profile_report(profile)
 
-    # Save the report to a file
-    with open("dataset_profile_report.html", "wb") as f:
-        profile.to_file(f)
-    st.write("### Download the Profile Report")
-    st.download_button(
-        label="Download Report",
-        data=open("dataset_profile_report.html", "rb"),
-        file_name="dataset_profile_report.html",
-        mime="text/html",
-    )
+    # Save the profile report to a temporary HTML file
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as tmp_file:
+        profile.to_file(tmp_file.name)
+        tmp_file_path = tmp_file.name
+
+    # Create a download button for the report
+    with open(tmp_file_path, "rb") as f:
+        st.download_button(
+            label="Download Profile Report",
+            data=f,
+            file_name="dataset_profile_report.html",
+            mime="text/html",
+        )
